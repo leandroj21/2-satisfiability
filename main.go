@@ -1,11 +1,15 @@
 package main
 
 import (
+	"2satisfiability/src"
 	"fmt"
 	"strconv"
 )
 
 func isSatisfiable(path string) bool {
+	// Create graph
+	var graph src.Graph
+	graph.CreateGraph(path)
 	return false
 }
 
