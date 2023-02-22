@@ -35,12 +35,10 @@ func (g *Graph) Get(label int, state bool) *Node {
 }
 
 func (g *Graph) Insert(node *Node, state bool) {
-	if g.Get(node.Label, state) == nil {
-		if state {
-			g.NodesNotNegated[node.Label] = node
-		} else {
-			g.NodesNegated[node.Label] = node
-		}
+	if state {
+		g.NodesNotNegated[node.Label] = node
+	} else {
+		g.NodesNegated[node.Label] = node
 	}
 }
 
@@ -71,12 +69,17 @@ func (g *Graph) CreateGraph(path string) {
 		from, _ := strconv.Atoi(connections[0])
 		to, _ := strconv.Atoi(connections[1])
 
-		nodeFrom := Node{Label: Abs(from)}
-		nodeTo := Node{Label: Abs(to)}
+		nodeFrom, nodeTo := g.Get(Abs(from), from > 0), g.Get(Abs(to), to > 0)
+		if nodeFrom == nil {
+			nodeFrom = &Node{Label: Abs(from)}
+			g.Insert(nodeFrom, from > 0)
+		}
+		if nodeTo == nil {
+			nodeTo = &Node{Label: Abs(to)}
+			g.Insert(nodeTo, to > 0)
+		}
+
 		edge := Edge{Label: to, State: to > 0}
 		nodeFrom.Neighbors = append(nodeFrom.Neighbors, edge)
-
-		g.Insert(&nodeFrom, from > 0)
-		g.Insert(&nodeTo, to > 0)
 	}
 }
