@@ -4,8 +4,10 @@ import (
 	"2satisfiability/src"
 	"fmt"
 	"strconv"
+	"time"
 )
 
+// isSatisfiable creates the graph and check if it is 2-satisfiable
 func isSatisfiable(path string) (bool, int) {
 	amountOfNodes, edgesList := src.ReadFile(path)
 
@@ -18,10 +20,10 @@ func isSatisfiable(path string) (bool, int) {
 	return graph.IsSatisfiable(edgesList, amountOfNodes)
 }
 
-func printErrors(errors map[int]int) {
-	fmt.Println("\nFails:")
+func printContradictions(errors map[int]int) {
+	fmt.Println("\n\nContradictions:")
 	for testcase, varTag := range errors {
-		fmt.Printf("2-sat%d (bit %d) failed due to a contradiction of: %d y %d\n",
+		fmt.Printf("2-sat%d (bit %d) failed due to a contradiction of: %d and %d\n",
 			testcase,
 			testcase,
 			varTag,
@@ -30,18 +32,33 @@ func printErrors(errors map[int]int) {
 	}
 }
 
+func printTiming(errors map[int]time.Duration, start time.Time) {
+	fmt.Println("\nTiming:")
+	for testcase, totalTime := range errors {
+		fmt.Printf("   Testing of bit %d took %v\n", testcase, totalTime)
+	}
+	fmt.Printf("   Finish time: %v\n", time.Since(start))
+}
+
 func main() {
-	// errors[num_of_testcase] = variable that caused error
-	errors := make(map[int]int)
-	pathBase := "./data/2sat"
+	start := time.Now()
+	// contradictions[num_of_testcase] = variable that caused error
+	contradictions := make(map[int]int)
+	timing := make(map[int]time.Duration)
+
 	fmt.Println("Satisfiability of the 6 testcases:")
+	pathBase := "./data/2sat"
 	for i := 1; i <= 6; i++ {
+		startLoop := time.Now()
 		if satisfiable, varTagError := isSatisfiable(pathBase + strconv.Itoa(i) + ".txt"); satisfiable {
 			fmt.Print(1)
 		} else {
-			errors[i] = varTagError
+			contradictions[i] = varTagError
 			fmt.Print(0)
 		}
+		timing[i] = time.Since(startLoop)
 	}
-	printErrors(errors)
+
+	printContradictions(contradictions)
+	printTiming(timing, start)
 }
