@@ -118,16 +118,20 @@ func (g *Graph) Dfs() {
 	}
 }
 
-func (g *Graph) checkCollisions() bool {
+// checkCollisions returns (true, varTag) if there is a contradiction between
+// [b] and [~b]. (false, 0) otherwise
+func (g *Graph) checkCollisions() (bool, int) {
 	for k := range g.dfsPath {
 		if _, exists := g.dfsPath[-k]; exists {
-			return true
+			return true, Abs(k)
 		}
 	}
-	return false
+	return false, 0
 }
 
-func (g *Graph) IsSatisfiable(edgesList []intTuple, amountOfNodes int) bool {
+// IsSatisfiable returns (true, 0) if the clauses are satisfiable. Otherwise
+// (false, varTag), where varTag is the variable with a contradiction
+func (g *Graph) IsSatisfiable(edgesList []intTuple, amountOfNodes int) (bool, int) {
 	// Run DFS
 	g.Dfs()
 
@@ -143,12 +147,12 @@ func (g *Graph) IsSatisfiable(edgesList []intTuple, amountOfNodes int) bool {
 		if !reversedGraph.Nodes[v].Visited {
 			reversedGraph.dfsPath = make(map[int]bool)
 			reversedGraph.dfsVisit(v, false, true)
-			if reversedGraph.checkCollisions() {
+			if contradiction, varTag := reversedGraph.checkCollisions(); contradiction {
 				stack.Clear()
-				return false
+				return false, varTag
 			}
 		}
 	}
 	stack.Clear()
-	return true
+	return true, 0
 }
