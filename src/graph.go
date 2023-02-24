@@ -1,7 +1,6 @@
 package src
 
 var (
-	count int
 	stack Stack
 )
 
@@ -14,42 +13,48 @@ type Node struct {
 
 type Graph struct {
 	Nodes         []*Node
-	pathToSource  string
 	AmountOfNodes int // TODO: can be temp
+	dfsPath       map[int]bool
 }
 
 // createNode create a node in the graph
-func (g *Graph) createNode(position int) {
+func (g *Graph) createNode(position int) *Node {
 	idx := position
 	// To support negated nodes
 	if position < 0 {
 		idx = (-1)*position + g.AmountOfNodes
 	}
 	if g.Nodes[idx] != nil {
-		return
+		return g.Nodes[idx]
 	}
 
 	g.Nodes[idx] = new(Node)
 	// Same label as its position
 	g.Nodes[idx].Label = position
+	return g.Nodes[idx]
 }
 
 // CreateGraph create the graph from a list of pairs of nodes
 func (g *Graph) CreateGraph(pairOfNodesList []intTuple, reverse bool) {
-	var nodeFrom *Node
-	for _, pair := range pairOfNodesList {
-		from, to := pair[0], pair[1]
+	for _, variables := range pairOfNodesList {
+		var1, var2 := variables[0], variables[1]
 		if reverse {
-			from, to = pair[1], pair[0]
+			var1, var2 = -variables[0], -variables[1]
 		}
 
-		// Create the nodes in the graph if they do not exist
-		g.createNode(from)
-		nodeFrom = g.Nodes[g.Get(from)]
-		g.createNode(to)
+		/* Create the nodes in the graph if they do not exist
+		 Connections are made using disjunctive syllogism:
+		-var1 -> var2
+		-var2 -> var1
+		*/
+		from1 := g.createNode(-var1)
+		g.createNode(var2)
+		from2 := g.createNode(-var2)
+		g.createNode(var1)
 
 		// Append neighbor
-		nodeFrom.Neighbors = append(nodeFrom.Neighbors, to)
+		from1.Neighbors = append(from1.Neighbors, var2)
+		from2.Neighbors = append(from2.Neighbors, var1)
 	}
 }
 
@@ -61,12 +66,9 @@ func (g *Graph) Get(label int) int {
 	return label
 }
 
+// dfsVisit returns true if in the path does not exist a pair [b] and [~b], false otherwise
 func (g *Graph) dfsVisit(index int, rollback, reverse bool) {
 	if index == 0 {
-		//if reverse {
-		//	// Insert path length into the max SCCs array
-		//	insertPathLength(count)
-		//}
 		return
 	}
 
@@ -74,9 +76,8 @@ func (g *Graph) dfsVisit(index int, rollback, reverse bool) {
 	if !rollback {
 		g.Nodes[index].Visited = true
 
-		// TODO: delete
 		if reverse {
-			count++
+			g.dfsPath[node.Label] = true
 		}
 	}
 
@@ -105,21 +106,30 @@ func (g *Graph) dfsVisit(index int, rollback, reverse bool) {
 }
 
 // Dfs of the graph
-func (g *Graph) Dfs(reverse bool) {
+func (g *Graph) Dfs() {
 	for idx, node := range g.Nodes {
 		if node == nil {
 			continue
 		}
 
 		if !node.Visited {
-			g.dfsVisit(idx, false, reverse)
+			g.dfsVisit(idx, false, false)
 		}
 	}
 }
 
+func (g *Graph) checkCollisions() bool {
+	for k := range g.dfsPath {
+		if _, exists := g.dfsPath[-k]; exists {
+			return true
+		}
+	}
+	return false
+}
+
 func (g *Graph) IsSatisfiable(edgesList []intTuple, amountOfNodes int) bool {
 	// Run DFS
-	g.Dfs(false)
+	g.Dfs()
 
 	// Create reversed graph G
 	reversedGraph := new(Graph)
@@ -131,10 +141,14 @@ func (g *Graph) IsSatisfiable(edgesList []intTuple, amountOfNodes int) bool {
 	for !stack.IsEmpty() {
 		v, _ := stack.Pop()
 		if !reversedGraph.Nodes[v].Visited {
-			count = 0
+			reversedGraph.dfsPath = make(map[int]bool)
 			reversedGraph.dfsVisit(v, false, true)
+			if reversedGraph.checkCollisions() {
+				stack.Clear()
+				return false
+			}
 		}
 	}
-
-	return false
+	stack.Clear()
+	return true
 }

@@ -23,7 +23,7 @@ func CheckError(e error) {
 }
 
 // ReadFile reads a text file to extract the nodes list of it
-func ReadFile(name string) (maxvalue int, nodeList []intTuple, lineCount int) {
+func ReadFile(name string) (amountOfNodes int, nodeList []intTuple) {
 	file, err := os.Open(name)
 	if err != nil {
 		log.Fatal(err)
@@ -41,22 +41,16 @@ func ReadFile(name string) (maxvalue int, nodeList []intTuple, lineCount int) {
 
 	scanner.Scan()
 	line := scanner.Text()
-	_, _ = fmt.Sscanf(line, "%d", &lineCount)
+	_, _ = fmt.Sscanf(line, "%d", &amountOfNodes)
 
 	var anod intTuple
 	for scanner.Scan() {
 		lineStr := scanner.Text()
 		_, err2 := fmt.Sscanf(lineStr, "%d %d", &anod[0], &anod[1])
 		if err2 != nil {
-			return 0, nil, 0
+			return 0, nil
 		}
 		nodeList = append(nodeList, anod)
-		if maxvalue < anod[0] {
-			maxvalue = anod[0]
-		}
-		if maxvalue < anod[1] {
-			maxvalue = anod[1]
-		}
 	}
 	return
 }
