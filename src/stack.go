@@ -8,12 +8,12 @@ type Stack struct {
 
 // Push a new value onto the stack
 func (stack *Stack) Push(num int) {
-	(*stack).items = append((*stack).items, num)
+	stack.items = append(stack.items, num)
 }
 
 // IsEmpty check if stack is empty
 func (stack *Stack) IsEmpty() bool {
-	return len((*stack).items) == 0
+	return len(stack.items) == 0
 }
 
 // Pop remove and return top element of stack. Return false if stack is empty.
