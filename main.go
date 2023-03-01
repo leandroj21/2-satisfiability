@@ -20,22 +20,27 @@ func isSatisfiable(path string) (bool, int) {
 	return graph.IsSatisfiable(edgesList, amountOfNodes)
 }
 
-func printContradictions(errors map[int]int) {
+func printContradictions(errors []int) {
 	fmt.Println("\n\nContradictions:")
 	for testcase, varTag := range errors {
-		fmt.Printf("2-sat%d (bit %d) failed due to a contradiction of: %d and %d\n",
-			testcase,
-			testcase,
+		// Ignore satisfiable problems
+		if varTag == -1 {
+			continue
+		}
+
+		fmt.Printf("2-sat%d.txt (bit %d) failed due to a contradiction of: %d and %d\n",
+			testcase+1,
+			testcase+1,
 			varTag,
 			-varTag,
 		)
 	}
 }
 
-func printTiming(errors map[int]time.Duration, start time.Time) {
+func printTiming(errors []time.Duration, start time.Time) {
 	fmt.Println("\nTiming:")
 	for testcase, totalTime := range errors {
-		fmt.Printf("   Testing of bit %d took %v\n", testcase, totalTime)
+		fmt.Printf("   Testing of bit %d took %v\n", testcase+1, totalTime)
 	}
 	fmt.Printf("   Finish time: %v\n", time.Since(start))
 }
@@ -43,8 +48,8 @@ func printTiming(errors map[int]time.Duration, start time.Time) {
 func main() {
 	start := time.Now()
 	// contradictions[num_of_testcase] = variable that caused error
-	contradictions := make(map[int]int)
-	timing := make(map[int]time.Duration)
+	contradictions := []int{-1, -1, -1, -1, -1, -1}
+	var timing []time.Duration
 
 	fmt.Println("Satisfiability of the 6 testcases:")
 	pathBase := "./data/2sat"
@@ -53,10 +58,10 @@ func main() {
 		if satisfiable, varTagError := isSatisfiable(pathBase + strconv.Itoa(i) + ".txt"); satisfiable {
 			fmt.Print(1)
 		} else {
-			contradictions[i] = varTagError
+			contradictions[i-1] = varTagError
 			fmt.Print(0)
 		}
-		timing[i] = time.Since(startLoop)
+		timing = append(timing, time.Since(startLoop))
 	}
 
 	printContradictions(contradictions)
